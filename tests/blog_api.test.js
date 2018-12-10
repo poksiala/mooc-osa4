@@ -16,7 +16,7 @@ describe('blog api', async () => {
       .expect('Content-Type', /application\/json/)
   })
 
-  test('valid blog can be added', async() => {
+  test('valid blog can be added', async () => {
     const newBlog = {
       title: 'test',
       author: 'test',
@@ -36,6 +36,21 @@ describe('blog api', async () => {
       .expect(200)
 
     expect(response.body.length).toBe(initialBlogs.body.length + 1)
+  })
+
+  test('likes default to 0', async () => {
+    const newBlog = {
+      title: 'test',
+      author: 'test',
+      url: 'http://example.com'
+    }
+
+    const response = await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(201)
+
+    expect(response.body.likes).toBe(0)
 
   })
 
