@@ -1,7 +1,7 @@
 const supertest = require('supertest')
 const { app, server } = require('../index')
 const Blog = require('../models/blog')
-const {blogsInDb} = require('./blog_api_helper')
+const {blogsInDb, blogById} = require('./blog_api_helper')
 const api = supertest(app)
 
 describe('GET blog api', async () => {
@@ -135,6 +135,50 @@ describe('DELETE blog api', async () => {
     expect(after.length).toBe(before.length)
   })
 })
+
+describe('PUT blog api', async () => {
+  let addedBlog
+  
+  beforeAll(async () => {
+    await Blog.remove({})
+
+    addedBlog = new Blog({
+      title: 'test',
+      author: 'test',
+      likes: 1,
+      url: 'http://example.com'
+    })
+    await addedBlog.save()
+
+  })
+
+  test('blog can be updated', async () => {
+    const before = await blogById(addedBlog.id)
+    const alt = {...before}
+    alt.likes += 1
+
+    const response = await api
+      .put(`/api/blogs/${addedBlog.id}`)
+      .send(alt)
+      .expect(200)
+
+    const after = await blogById(addedBlog.id)
+
+    expect(after.likes).toBe(before.likes + 1)
+    expect(response.body.likes).toBe(after.likes)
+  })
+
+  test('invalid id is responded with 400', async () => {
+
+    const invalidId = '12938ueutypquwhps'
+
+    await api
+      .put(`/api/blogs/${invalidId}`)
+      .expect(400)
+
+  })
+})
+
 
 afterAll(() => {
   server.close()

@@ -15,7 +15,13 @@ const blogsInDb = async () => {
   return blogs.map(format)
 }
 
+const blogById = async (id) => {
+  const blog = await Blog.findById(id)
+  return format(blog)
+}
+
 module.exports = {
   blogsInDb,
   format,
+  blogById,
 }
