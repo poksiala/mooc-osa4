@@ -51,7 +51,42 @@ describe('blog api', async () => {
       .expect(201)
 
     expect(response.body.likes).toBe(0)
+  })
 
+  test('POST without url is refused', async () => {
+    const newBlog = {
+      title: 'test',
+      author: 'test',
+    }
+
+    const before = await api.get('/api/blogs').expect(200)
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(400)
+
+    const after = await api.get('/api/blogs').expect(200)
+
+    expect(after.body.length).toBe(before.body.length)
+  })
+
+  test('POST without title is refused', async () => {
+    const newBlog = {
+      author: 'test',
+      url: 'http://example.com'
+    }
+
+    const before = await api.get('/api/blogs').expect(200)
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(400)
+
+    const after = await api.get('/api/blogs').expect(200)
+
+    expect(after.body.length).toBe(before.body.length)
   })
 
   afterAll(() => {

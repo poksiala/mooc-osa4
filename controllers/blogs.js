@@ -14,6 +14,9 @@ blogsRouter.get('/', async (request, response) => {
 blogsRouter.post('/', async (request, response) => {
   try {
     const blogData = {...request.body}
+    if (blogData.url === undefined) return response.status(400).end()
+    if (blogData.title === undefined) return response.status(400).end()
+    
     if (blogData.likes === undefined) blogData.likes = 0
     const blog = new Blog(blogData)
 
