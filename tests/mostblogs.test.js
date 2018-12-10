@@ -7,7 +7,7 @@ describe('most blogs',  () => {
     const result = listHelper.mostBlogs(blogData.many)
 
     expect(result).toEqual({
-      author: "Robert C. Martin",
+      author: 'Robert C. Martin',
       blogs: 3
     })
   })

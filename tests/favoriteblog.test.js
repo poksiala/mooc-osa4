@@ -7,8 +7,8 @@ describe('favorite blog',  () => {
     const result = listHelper.favoriteBlog(blogData.many)
 
     expect(result).toEqual({
-      title: "Canonical string reduction",
-      author: "Edsger W. Dijkstra",
+      title: 'Canonical string reduction',
+      author: 'Edsger W. Dijkstra',
       likes: 12,
     })
   })
