@@ -4,11 +4,7 @@ const Blog = require('../models/blog')
 const {blogsInDb} = require('./blog_api_helper')
 const api = supertest(app)
 
-describe('blog api', async () => {
-
-  beforeAll(async () => {
-    await Blog.remove({})
-  })
+describe('GET blog api', async () => {
 
   test('blogs are returned', async () => {
     await api
@@ -16,6 +12,9 @@ describe('blog api', async () => {
       .expect(200)
       .expect('Content-Type', /application\/json/)
   })
+})
+
+describe('POST blog api', async () => {
 
   test('valid blog can be added', async () => {
     const newBlog = {
@@ -45,14 +44,14 @@ describe('blog api', async () => {
       url: 'http://example.com'
     }
 
-    const before = blogsInDb()
+    const before = await blogsInDb()
 
     const response = await api
       .post('/api/blogs')
       .send(newBlog)
       .expect(201)
 
-    const after = blogsInDb()
+    const after = await blogsInDb()
 
     expect(response.body.likes).toBe(0)
     expect(after.length).toBe(before.length + 1)
@@ -93,9 +92,50 @@ describe('blog api', async () => {
 
     expect(after.length).toBe(before.length)
   })
+})
 
-  afterAll(() => {
-    server.close()
+describe('DELETE blog api', async () => {
+  let addedBlog
+  
+  beforeAll(async () => {
+    await Blog.remove({})
+
+    addedBlog = new Blog({
+      title: 'test',
+      author: 'test',
+      likes: 1,
+      url: 'http://example.com'
+    })
+    await addedBlog.save()
+
   })
 
+  test('blog can be deleted', async () => {
+    const before = await blogsInDb()
+    
+    await api
+      .delete(`/api/blogs/${addedBlog.id}`)
+      .expect(204)
+
+    const after = await blogsInDb()
+    expect(after.length).toBe(before.length - 1)
+
+  })
+
+  test('invalid id is responded with 400', async () => {
+    const before = await blogsInDb()
+    
+    const invalidId = '12938ueutypquwhps'
+
+    await api
+      .delete(`/api/blogs/${invalidId}`)
+      .expect(400)
+
+    const after = await blogsInDb()
+    expect(after.length).toBe(before.length)
+  })
+})
+
+afterAll(() => {
+  server.close()
 })
