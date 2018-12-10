@@ -1,6 +1,7 @@
 const supertest = require('supertest')
 const { app, server } = require('../index')
 const Blog = require('../models/blog')
+const {blogsInDb} = require('./blog_api_helper')
 const api = supertest(app)
 
 describe('blog api', async () => {
@@ -24,18 +25,17 @@ describe('blog api', async () => {
       url: 'http://example.com'
     }
 
-    const initialBlogs = await api.get('/api/blogs').expect(200)
+    const before = await blogsInDb()
     
     await api
       .post('/api/blogs')
       .send(newBlog)
       .expect(201)
     
-    const response = await api
-      .get('/api/blogs')
-      .expect(200)
+    const after = await blogsInDb()
 
-    expect(response.body.length).toBe(initialBlogs.body.length + 1)
+    expect(after.length).toBe(before.length + 1)
+    expect(after).toContainEqual(newBlog)
   })
 
   test('likes default to 0', async () => {
@@ -45,12 +45,17 @@ describe('blog api', async () => {
       url: 'http://example.com'
     }
 
+    const before = blogsInDb()
+
     const response = await api
       .post('/api/blogs')
       .send(newBlog)
       .expect(201)
 
+    const after = blogsInDb()
+
     expect(response.body.likes).toBe(0)
+    expect(after.length).toBe(before.length + 1)
   })
 
   test('POST without url is refused', async () => {
@@ -59,16 +64,16 @@ describe('blog api', async () => {
       author: 'test',
     }
 
-    const before = await api.get('/api/blogs').expect(200)
+    const before = await blogsInDb()
 
     await api
       .post('/api/blogs')
       .send(newBlog)
       .expect(400)
 
-    const after = await api.get('/api/blogs').expect(200)
+    const after = await blogsInDb()
 
-    expect(after.body.length).toBe(before.body.length)
+    expect(after.length).toBe(before.length)
   })
 
   test('POST without title is refused', async () => {
@@ -77,16 +82,16 @@ describe('blog api', async () => {
       url: 'http://example.com'
     }
 
-    const before = await api.get('/api/blogs').expect(200)
+    const before = await blogsInDb()
 
     await api
       .post('/api/blogs')
       .send(newBlog)
       .expect(400)
 
-    const after = await api.get('/api/blogs').expect(200)
+    const after = await blogsInDb()
 
-    expect(after.body.length).toBe(before.body.length)
+    expect(after.length).toBe(before.length)
   })
 
   afterAll(() => {
