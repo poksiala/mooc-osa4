@@ -1,7 +1,8 @@
 const supertest = require('supertest')
 const { app, server } = require('../index')
 const Blog = require('../models/blog')
-const {blogsInDb, blogById} = require('./blog_api_helper')
+const User = require('../models/user')
+const {blogsInDb, blogById, usersInDb, userById} = require('./api_helper')
 const api = supertest(app)
 
 describe('GET blog api', async () => {
@@ -177,6 +178,119 @@ describe('PUT blog api', async () => {
       .expect(400)
 
   })
+})
+
+describe('GET user api', async () => {
+
+  test('GET / 200', async () => {
+    await api
+      .get('/api/users')
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+  })
+})
+
+describe('POST user api', async () => {
+  let exsistingUser
+  beforeAll(async () => {
+    await User.remove({})
+
+    exsistingUser = new User({
+      username: 'test',
+      name: 'test',
+      password: 'test',
+      adult: true
+    })
+    await exsistingUser.save()
+  })
+
+  test('Valid user can be added', async () => {
+    const before = await usersInDb()
+    
+    const newUser = {
+      username: 'test2',
+      name: 'test2',
+      password: 'test2',
+      adult: true
+    }
+
+    await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+
+    const after = await usersInDb()
+
+    expect(after.length).toBe(before.length + 1)
+  })
+
+  test('Username must be unique', async () => {
+    const before = await usersInDb()
+    
+    const newUser = {
+      username: 'test',
+      password: '9sd8gy0as9df87g0',
+      name: 'alksjd lkasd',
+      adult: true
+    }
+
+    await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(400)
+
+    const after = await usersInDb()
+
+    expect(after.length).toBe(before.length)
+
+  })
+
+  test('pasword must be long enough', async () => {
+    const before = await usersInDb()
+    
+    const newUser = {
+      username: 'test2135123',
+      password: '9s',
+      name: 'alksjd lkasd',
+      adult: true
+    }
+
+    await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(400)
+
+    const after = await usersInDb()
+
+    expect(after.length).toBe(before.length)
+
+  })
+
+  test('Adult defaults to true', async () => {
+    const before = await usersInDb()
+    
+    const newUser = {
+      username: 'test2135123',
+      password: '9s3543546',
+      name: 'alksjd lkasd',
+    }
+
+    const response = await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(201)
+    
+
+    const createdUser = await userById(response.body.id)
+
+    const after = await usersInDb()
+
+    expect(createdUser.adult).toBe(true)
+    expect(after.length).toBe(before.length + 1)
+
+  })
+  
 })
 
 

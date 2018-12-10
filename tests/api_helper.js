@@ -1,5 +1,5 @@
 const Blog = require('../models/blog')
-
+const User = require('../models/user')
 
 const format = blog => {
   return {
@@ -20,8 +20,20 @@ const blogById = async (id) => {
   return format(blog)
 }
 
+const usersInDb = async () => {
+  const users = await User.find({})
+  return users.map(User.format)
+}
+
+const userById = async (id) => {
+  const user = await User.findById(id)
+  return User.format(user)
+}
+
 module.exports = {
   blogsInDb,
   format,
   blogById,
+  userById,
+  usersInDb,
 }
